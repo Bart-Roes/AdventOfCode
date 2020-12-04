@@ -1,0 +1,101 @@
+---
+title: "Day2"
+author: "Bart Roes"
+date: "December 4, 2020"
+output: html_document
+---
+
+[Link to Question](https://adventofcode.com/2020/day/3)
+
+
+```{r setup}
+setwd("~/Continuous learning/AdventOfCode/Day3")
+my_data <- read.delim("input.txt", header = F)
+
+```
+
+> Starting at the top-left corner of your map and following a slope of right 3 and down 1, how many trees would you encounter?
+
+
+```{r}
+
+library(stringr)
+
+# How many repititions are needed? 
+steps_right <- 3
+steps_down <- 1
+
+total_out <- nrow(my_data) *steps_right
+reps_needed <- ceiling(total_out / str_count(my_data$V1[1], ".|#"))
+
+
+my_land_map <- tibble(rownum = 1:nrow(my_data),
+                      geocode = NA_character_)
+  
+for(i in 1:nrow(my_data)) {
+  my_land_map[i,2] <- str_c(rep(my_data$V1[i], reps_needed), collapse = "")
+}
+  
+positions <-  c(1:nrow(my_land_map)-1) * steps_right + 1
+
+my_land_map <- my_land_map %>%
+  mutate(
+    check_tree = substr(geocode, positions[rownum], positions[rownum]),
+    count_tree = ifelse(check_tree == "#",1,0)
+  ) 
+
+my_land_map$count_tree %>% sum
+
+```
+
+
+# Question 2
+
+> What do you get if you multiply together the number of trees encountered on each of the listed slopes?
+
+Right 1, down 1.
+Right 3, down 1. (This is the slope you already checked.)
+Right 5, down 1.
+Right 7, down 1.
+Right 1, down 2.
+
+
+```{r}
+# How many repititions are needed? 
+find_trees <- function(steps_down, steps_right){
+  
+  total_out <- nrow(my_data) *steps_right
+  reps_needed <- ceiling(total_out / str_count(my_data$V1[1], ".|#"))
+  
+  my_land_map <- tibble(rownum = 1:nrow(my_data), geocode = NA_character_)
+  
+  for(i in 1:nrow(my_data)) {
+    my_land_map[i,2] <- str_c(rep(my_data$V1[i], reps_needed), collapse = "")
+  }
+  
+  positions <- c(1:nrow(my_land_map)-1) * (steps_right/steps_down)  + 1
+  valid_positions <- ifelse(positions == round(positions),positions,NA)
+  
+  my_land_map <- my_land_map %>%
+    mutate(
+      check_tree = substr(geocode, valid_positions[rownum], valid_positions[rownum]),
+      count_tree = ifelse(check_tree == "#",1,0)
+    ) 
+  
+  solution <- my_land_map$count_tree %>% sum(na.rm = T)
+  
+  return(solution)
+  
+}
+
+find_trees(1,1) *
+find_trees(1,3) *
+find_trees(1,5) *
+find_trees(1,7) *
+find_trees(2,1)
+
+```
+
+
+
+

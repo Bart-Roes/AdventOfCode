@@ -1,0 +1,77 @@
+---
+title: "Day2"
+author: "Bart Roes"
+date: "December 4, 2020"
+output: html_document
+---
+
+[Link to Question](https://adventofcode.com/2020/day/2)
+
+```{r setup}
+setwd("~/Continuous learning/AdventOfCode/Day2")
+my_data <- read.delim("input.txt", header = F)
+
+```
+
+> How many passwords are valid according to their policies?
+
+# Question 1
+
+```{r}
+
+char_vec <- my_data$V1
+
+library(stringr)
+
+pw_data <- tibble(
+  original_string = char_vec,
+  rule = substr(char_vec,1,stringr::str_locate(char_vec, ":")-1),
+  password = substr(char_vec,stringr::str_locate(char_vec, ":")+1, length(char_vec))
+)
+
+pw_data <- pw_data  %>%
+  
+  # decompose rule elements
+  mutate(
+    at_least = str_extract(string = rule, pattern =  "[0-9]+") %>%
+      as.numeric,
+    at_most = str_extract(string = substr(rule,3,length(rule)), pattern =  "[0-9]+") %>%
+      as.numeric,
+    letter = str_extract(string = rule, pattern =  "[a-z]{1}")
+  ) %>%
+  
+  # apply rule logic
+  rowwise() %>%
+  
+  mutate(
+    valid = between(str_count(password, letter),at_least, at_most)
+  )
+
+
+pw_data$valid %>% sum
+
+```
+
+
+# Question 2
+
+```{r}
+
+pw_data %>%
+  mutate(valid = 
+           substr(trimws(password),at_least,at_least) == letter &
+           substr(trimws(password),at_most,at_most) != letter | 
+           substr(trimws(password),at_least,at_least) != letter &
+           substr(trimws(password),at_most,at_most) == letter
+  ) %>%
+  .$valid %>% sum
+
+```
+
+
+
+
+
+
+
+

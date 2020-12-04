@@ -1,0 +1,80 @@
+---
+title: "Day1"
+author: "Bart Roes"
+date: "December 4, 2020"
+output: html_document
+---
+
+[Link to Question](https://adventofcode.com/2020/day/1)
+
+```{r setup}
+library(tidyverse)
+library(gtools) # create permutations
+```
+
+> Find the two entries that sum to 2020; what do you get if you multiply them together?
+
+
+# Load data
+
+```{r}
+# setwd("./Day1")
+my_data <- read.delim("input.txt", header = F)
+glimpse(my_data)
+```
+
+
+
+# Question 1
+
+```{r}
+
+num_vec <- my_data$V1
+
+combi_matrix <- matrix(
+  nrow = 200,
+  ncol = 200
+)
+
+for(i in 1:200){
+  for(k in 1:200) {
+    combi_matrix[i,k] <- num_vec[i] + num_vec[k]
+  }
+}
+
+# Pair-wise solution
+which(combi_matrix == 2020, arr.ind = T)
+
+num_vec[184] * num_vec[84]
+
+```
+
+
+# Question 2
+
+```{r}
+
+num_vec
+
+
+all_combinations <- gtools::permutations(n = 200, r = 3, v = num_vec)
+
+# Obtain solution
+all_combinations %>%
+  as_tibble() %>%
+  mutate(sum_total = V1 + V2 + V3) %>%
+  filter(sum_total == 2020) %>%
+  mutate(solution = V1*V2*V3) %>%
+  .$solution %>%
+  unique
+
+```
+
+
+
+
+
+
+
+
+
