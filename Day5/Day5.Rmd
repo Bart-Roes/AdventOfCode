@@ -1,0 +1,146 @@
+---
+title: "Day5"
+author: "Bart Roes"
+date: "December 5, 2020"
+output: html_document
+---
+
+[Link to Question](https://adventofcode.com/2020/day/5)
+
+
+```{r setup}
+setwd("~/Continuous learning/Advent_Of_Code/Day5")
+my_data <- read.delim("input.txt", header = F, blank.lines.skip = F)
+
+```
+
+> As a sanity check, look through your list of boarding passes. What is the highest seat ID on a boarding pass?
+
+
+```{r}
+library(tidyverse)
+
+find_seat <- function(seat_string){
+  
+  i <- 1
+  min_row <- 0
+  max_row <- 127
+  
+  while(i < 8) {
+    
+    row_input <- substr(seat_string, i, i)
+    i <- i+1
+    
+    if(row_input == "F"){
+      min_row <- min_row
+      max_row <- max_row - (1+ max_row - min_row) / 2
+    } else if (row_input == "B"){
+      min_row <- min_row + (1 + max_row - min_row) / 2
+      max_row <- max_row
+    }
+    
+  }
+  
+  i <- 8
+  min_col <- 0
+  max_col <- 7
+  while(i < 12) {
+    
+    col_input <- substr(seat_string, i, i)
+    i <- i+1
+    
+    if(col_input == "L"){
+      min_col <- min_col
+      max_col <- max_col - (1+ max_col - min_col) / 2
+    } else if (col_input == "R"){
+      min_col <- min_col + (1 + max_col - min_col) / 2
+      max_col <- max_col
+    }
+    
+  }
+  
+  # return(max_col)
+  return(max_row * 8 + max_col)
+}
+
+find_seat(my_data$V1[1])
+
+sapply(
+  my_data$V1,
+  find_seat
+  ) %>% max
+
+
+```
+
+
+# Question 2
+
+> What is the ID of your seat?
+
+```{r}
+
+library(foreach)
+
+find_seat <- function(seat_string){
+  
+  i <- 1
+  min_row <- 0
+  max_row <- 127
+  
+  while(i < 8) {
+    
+    row_input <- substr(seat_string, i, i)
+    i <- i+1
+    
+    if(row_input == "F"){
+      min_row <- min_row
+      max_row <- max_row - (1+ max_row - min_row) / 2
+    } else if (row_input == "B"){
+      min_row <- min_row + (1 + max_row - min_row) / 2
+      max_row <- max_row
+    }
+    
+  }
+  
+  i <- 8
+  min_col <- 0
+  max_col <- 7
+  while(i < 12) {
+    
+    col_input <- substr(seat_string, i, i)
+    i <- i+1
+    
+    if(col_input == "L"){
+      min_col <- min_col
+      max_col <- max_col - (1+ max_col - min_col) / 2
+    } else if (col_input == "R"){
+      min_col <- min_col + (1 + max_col - min_col) / 2
+      max_col <- max_col
+    }
+    
+  }
+  return(list(row=max_row, col=max_col))
+}
+
+all_seats <- lapply(my_data$V1, find_seat)
+seats_data <- tibble(
+  row = foreach(i = 1:length(all_seats)) %do% {all_seats[[i]]$row} %>% as.numeric,
+  col = foreach(i = 1:length(all_seats)) %do% {all_seats[[i]]$col} %>% as.numeric
+)
+
+# create map of all seats
+expand.grid(
+  row = plane_rows,
+  col = plane_columns
+) %>%
+  # Remove seats in the front and the back
+  filter(between(row, 1 + min(seats_data$row), max(seats_data$row) - 1)) %>%
+  # Remove already taken seats
+  anti_join(seats_data, by = c("row","col"))
+
+seat_id <- 82*8+1
+
+```
+
+
