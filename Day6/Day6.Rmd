@@ -1,0 +1,105 @@
+---
+title: "Day6"
+author: "Bart Roes"
+date: "December 6, 2020"
+output: html_document
+---
+
+[Link to Question](https://adventofcode.com/2020/day/6)
+
+
+```{r setup}
+setwd("~/Continuous learning/Advent_Of_Code/Day6")
+my_data <- read.delim("input.txt", header = F, blank.lines.skip = F)
+
+```
+
+# Question 1
+
+> For each group, count the number of questions to which anyone answered "yes". What is the sum of those counts?
+
+
+```{r}
+library(stringr)
+library(tidyverse)
+library(foreach)
+
+line_breaks <- my_data$V1 == ""
+my_answers <- vector(mode = "list", length = sum(line_breaks)+1)
+
+# Group answers together in single character string
+for (i in 1:length(my_answers)){
+  if(i == 1){
+    my_answers[[i]] <- my_data[1:(which(line_breaks)[i]-1),] %>% 
+      str_c(collapse = "")
+  } else  if(i == length(my_answers)){
+    my_answers[[i]] <- my_data[(which(line_breaks)[i-1]+1):nrow(my_data),] %>% 
+      str_c(collapse = "")
+  } else {
+    my_answers[[i]] <- my_data[(which(line_breaks)[i-1]+1):(which(line_breaks)[i]-1),] %>% 
+      str_c(collapse = "")
+  }
+}
+
+
+# Detect unique alphabet letter in each string
+all_answers <- 
+  foreach(n = 1:length(my_answers), .combine = bind_cols) %do% {
+    answer_string <- foreach(i = letters, .combine = "c") %do% {
+      str_detect(my_answers[[n]],i)
+    }
+    tibble(answer = answer_string)
+  }
+
+# Summarize over all answer groups
+foreach(i = 1:ncol(all_answers), .combine = sum) %do% {
+  all_answers[,i] %>% unlist %>% sum
+}
+
+
+```
+
+
+# Question 2
+
+> What is the ID of your seat?
+
+```{r}
+
+my_answers <- vector(mode = "list", length = sum(line_breaks)+1)
+
+# Group answers together in single character string, with room for breaks
+for (i in 1:length(my_answers)){
+  if(i == 1){
+    my_answers[[i]] <- my_data[1:(which(line_breaks)[i]-1),] %>% 
+      str_c(collapse = " ")
+  } else  if(i == length(my_answers)){
+    my_answers[[i]] <- my_data[(which(line_breaks)[i-1]+1):nrow(my_data),] %>% 
+      str_c(collapse = " ")
+  } else {
+    my_answers[[i]] <- my_data[(which(line_breaks)[i-1]+1):(which(line_breaks)[i]-1),] %>% 
+      str_c(collapse = " ")
+  }
+}
+
+# Iterate over all answer groups
+foreach(n = 1:length(my_answers), .combine = sum) %do% {
+  
+  # Iterate over each letter in the alphabet
+  foreach(i = letters, .combine = "c") %do% {
+    
+    # Flag TRUE if all sub-components of the group have the letter
+    strings_to_check <- str_split(my_answers[[n]]," ") %>% unlist
+    letter_detected <- foreach(s = strings_to_check, .combine = "c") %do% {str_detect(s,i)}
+    all_yes <- ifelse(sum(letter_detected) == length(strings_to_check),TRUE,FALSE)
+    
+    return(all_yes)
+  }
+}
+
+
+```
+
+
+
+
